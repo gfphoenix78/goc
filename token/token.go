@@ -18,13 +18,13 @@ func (t *Token) String() string {
 	return t.Str
 }
 
-
 const (
 	IDENT TokenKind = iota
 
-	INT_LIT		// 34
+	INT_LIT   // 34
 	FLOAT_LIT // 11.23
-	BOOL_LIT // true/false
+	BOOL_LIT  // true/false
+	STRING_LIT // "hi"
 
 	// keyword. not package/import now
 
@@ -45,22 +45,22 @@ const (
 	TYPE
 
 	// operator
-	ADD   // +
-	SUB   // -
-	MUL   // *
-	DIV   // /
-	REM   // %
+	ADD // +
+	SUB // -
+	MUL // *
+	DIV // /
+	REM // %
 	// bit ops
-	AND   // &
-	OR    // |
-	NOT   // ~
-	XOR   // ^
+	AND // &
+	OR  // |
+	NOT // ~
+	XOR // ^
 	SHL // <<
 	SHR // >>
 	// logic ops
-	LAND   // &&
-	LOR    // ||
-	LNOT	// !
+	LAND // &&
+	LOR  // ||
+	LNOT // !
 	// conditional ops
 	EQ     // ==
 	LT     // <
@@ -69,141 +69,125 @@ const (
 	NE     // !=
 	LE     // <=
 	GE     // >=
-	
 
-	ADD_ASSIGN   // +=
-	SUB_ASSIGN   // -=
-	MUL_ASSIGN   // *=
-	DIV_ASSIGN   // /=
-	REM_ASSIGN   // %=
-	AND_ASSIGN   // &=
-	OR_ASSIGN    // |=
-	XOR_ASSIGN   // ^=
-	RIGHT_ASSIGN // >>=
-	LEFT_ASSIGN  // <<=
+	ADD_ASSIGN  // +=
+	SUB_ASSIGN  // -=
+	MUL_ASSIGN  // *=
+	DIV_ASSIGN  // /=
+	REM_ASSIGN  // %=
+	AND_ASSIGN  // &=
+	OR_ASSIGN   // |=
+	XOR_ASSIGN  // ^=
+	SHL_ASSIGN  // <<=
+	SHR_ASSIGN  // >>=
+	LAND_ASSIGN // &&=
+	LOR_ASSIGN  // ||=
 
+	INC // ++
+	DEC // --
 
-	ARROW  // ->
-	
-	INC    // ++
-	DEC    // --
-
-QUE   // ?
+	QMARK    // ?
 	LPAREN   // (
 	LBRACK   // [
 	LBRACE   // {
+	RPAREN   // )
+	RBRACK   // ]
+	RBRACE   // }
 	COMMA    // ,
+	AT		// @
+	SHARP	// #
 	PERIOD   // .
 	ELLIPSIS // ...
 
-	RPAREN    // )
-	RBRACK    // ]
-	RBRACE    // }
 	SEMICOLON // ;
 	COLON     // :
 
 	// special tokens
 	EOF
-	COMMENT // /* or //
+	COMMENT
 	UNKNOWN
 )
 
-func (k TokenKind) String() string {
+func (k TokenKind) StringV() string {
 	return [...]string{
 		IDENT: "IDENT",
 
-		INT_CONST:    "INT_CONST",
-		FLOAT_CONST:  "FLOAT_CONST",
-		STRING_CONST: "STRING_CONST",
-		CHAR_CONST:   "CHAR_CONST",
+		INT_LIT:   "INT_LIT",
+		FLOAT_LIT: "FLOAT_LIT",
+		BOOL_LIT:  "BOOL_LIT",
+		STRING_LIT: "STRING_LIT",
 
-		INT:    "INT",
-		VOID:   "VOID",
-		CHAR:   "CHAR",
-		FLOAT:  "FLOAT",
-		LONG:   "LONG",
-		SHORT:  "SHORT",
-		DOUBLE: "DOUBLE",
+		IF:          "IF",
+		ELSE:        "ELSE",
+		FOR:         "FOR",
+		RETURN:      "RETURN",
+		SWITCH:      "SWITCH",
+		CASE:        "CASE",
+		DEFAULT:     "DEFAULT",
+		CONTINUE:    "CONTINUE",
+		BREAK:       "BREAK",
+		FALLTHROUGH: "FALLTHROUGH",
+		GOTO:        "GOTO",
+		FUNC:        "FUNC",
+		VAR:         "VAR",
+		STRUCT:      "STRUCT",
+		TYPE:        "TYPE",
 
-		DO:       "DO",
-		WHILE:    "WHILE",
-		IF:       "IF",
-		ELSE:     "ELSE",
-		FOR:      "FOR",
-		AUTO:     "AUTO",
-		RETURN:   "RETURN",
-		SWITCH:   "SWITCH",
-		CASE:     "CASE",
-		DEFAULT:  "DEFAULT",
-		CONTINUE: "CONTINUE",
-		BREAK:    "BREAK",
-		GOTO:     "GOTO",
-		CONST:    "CONST",
-		EXTERN:   "EXTERN",
-		REGISTER: "REGISTER",
-		SIGNED:   "SIGNED",
-		UNSIGNED: "UNSIGNED",
-		SIZEOF:   "SIZEOF",
-		STATIC:   "STATIC",
-		STRUCT:   "STRUCT",
-		TYPEDEF:  "TYPEDEF",
-		UNION:    "UNION",
-		VOLATILE: "VOLATILE",
-		ENUM:     "ENUM",
+		ADD: "ADD",
+		SUB: "SUB",
+		MUL: "MUL",
+		DIV: "DIV",
+		REM: "REM",
 
-		ADD:   "ADD",
-		SUB:   "SUB",
-		MUL:   "MUL",
-		DIV:   "DIV",
-		REM:   "REM",
-		AND:   "AND",
-		OR:    "OR",
-		QUE:   "QUE",
-		XOR:   "XOR",
-		TILDE: "TILDE",
-
-		ADD_ASSIGN:   "ADD_ASSIGN",
-		SUB_ASSIGN:   "SUB_ASSIGN",
-		MUL_ASSIGN:   "MUL_ASSIGN",
-		DIV_ASSIGN:   "DIV_ASSIGN",
-		REM_ASSIGN:   "REM_ASSIGN",
-		RIGHT_ASSIGN: "RIGHT_ASSIGN",
-		LEFT_ASSIGN:  "LEFT_ASSIGN",
-		AND_ASSIGN:   "AND_ASSIGN",
-		OR_ASSIGN:    "OR_ASSIGN",
-		XOR_ASSIGN:   "XOR_ASSIGN",
-
+		AND: "AND",
+		OR:  "OR",
+		NOT: "NOT",
+		XOR: "XOR",
 		SHL: "SHL",
 		SHR: "SHR",
-		ARROW:  "ARROW",
+
 		LAND:   "LAND",
 		LOR:    "LOR",
-		INC:    "INC",
-		DEC:    "DEC",
+		LNOT:   "LNOT",
 		EQ:     "EQ",
 		LT:     "LT",
 		GT:     "GT",
 		ASSIGN: "ASSIGN",
-		NOT:    "NOT",
 		NE:     "NE",
 		LE:     "LE",
 		GE:     "GE",
 
-		LPAREN: "LPAREN",
-		LBRACK: "LBRACK",
-		LBRACE: "LBRACE",
-		COMMA:  "COMMA",
-		PERIOD: "PERIOD",
+		ADD_ASSIGN:  "ADD_ASSIGN",
+		SUB_ASSIGN:  "SUB_ASSIGN",
+		MUL_ASSIGN:  "MUL_ASSIGN",
+		DIV_ASSIGN:  "DIV_ASSIGN",
+		REM_ASSIGN:  "REM_ASSIGN",
+		AND_ASSIGN:  "AND_ASSIGN",
+		OR_ASSIGN:   "OR_ASSIGN",
+		XOR_ASSIGN:  "XOR_ASSIGN",
+		SHL_ASSIGN:  "SHL_ASSIGN",
+		SHR_ASSIGN:  "SHR_ASSIGN",
+		LAND_ASSIGN: "LAND_ASSIGN",
+		LOR_ASSIGN:  "LOR_ASSIGN",
 
-		RPAREN:    "RPAREN",
-		RBRACK:    "RBRACK",
-		RBRACE:    "RBRACE",
+		INC:      "INC",
+		DEC:      "DEC",
+		QMARK:    "QMARK",
+		LPAREN:   "LPAREN",
+		LBRACK:   "LBRACK",
+		LBRACE:   "LBRACE",
+		RPAREN:   "RPAREN",
+		RBRACK:   "RBRACK",
+		RBRACE:   "RBRACE",
+		AT: "AT",
+		SHARP: "SHARP",
+		COMMA:    "COMMA",
+		PERIOD:   "PERIOD",
+		ELLIPSIS: "ELLIPSIS",
+
 		SEMICOLON: "SEMICOLON",
 		COLON:     "COLON",
-		ELLIPSIS:  "ELLIPSIS",
 
-		EOF:     "EOF",
-		COMMENT: "COMMENT",
-		UNKNOWN: "UNKNOWN",
+		EOF: "EOF",
 	}[k]
 }

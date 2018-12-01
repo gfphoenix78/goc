@@ -3,29 +3,8 @@ package lexer
 import . "gocc/token"
 
 var (
-	typeKeys = map[string]TokenKind{
-		"int":      INT,
-		"void":     VOID,
-		"char":     CHAR,
-		"float":    FLOAT,
-		"long":     LONG,
-		"short":    SHORT,
-		"double":   DOUBLE,
-		"struct":   STRUCT,
-		"union":    UNION,
-		"signed":   SIGNED,
-		"unsigned": UNSIGNED,
-		"static":   STATIC,
-		"auto":     AUTO,
-		"extern":   EXTERN,
-		"register": REGISTER,
-		"const":    CONST,
-		"volatile": VOLATILE,
-	}
 
 	keywords = map[string]TokenKind{
-		"do":       DO,
-		"while":    WHILE,
 		"if":       IF,
 		"else":     ELSE,
 		"for":      FOR,
@@ -35,13 +14,16 @@ var (
 		"default":  DEFAULT,
 		"continue": CONTINUE,
 		"break":    BREAK,
+		"fallthrough": FALLTHROUGH,
 		"goto":     GOTO,
-		"sizeof":   SIZEOF,
-		"typedef":  TYPEDEF,
+		"func": FUNC,
+		"var": VAR,
+		"struct" : STRUCT,
+		"type":  TYPE,
 	}
 
 	singleTokens = map[byte]TokenKind{
-		'?': QUE,
+		'?': QMARK,
 		'(': LPAREN,
 		')': RPAREN,
 		'{': LBRACE,
@@ -51,6 +33,9 @@ var (
 		';': SEMICOLON,
 		',': COMMA,
 		':': COLON,
-		'~': TILDE,
+		'.': PERIOD,
+		'~': NOT,
+		'@':AT,
+		'#':SHARP,
 	}
 )
