@@ -1,30 +1,32 @@
 package lexer
 
-import "gocc/token"
+import (
+	"gocc/token"
+)
 
-type Lexer struct {
+type BaseLexer struct {
 	scanner *Scanner
 }
 
-func NewLexer(source []byte) *Lexer {
-	return &Lexer{scanner: NewScanner(source)}
+
+func NewLexer(source []byte) *BaseLexer {
+	return &BaseLexer{scanner: NewScanner(source)}
 }
 
-func (l *Lexer) Pos() token.Position {
+func (l *BaseLexer) Pos() token.Position {
 	return l.scanner.Pos()
 }
 
-func (l *Lexer) Next() *token.Token {
-	t := &token.Token{}
+func (l *BaseLexer) Next() *token.Token {
 	if l.scanner.IsEnd() {
-		t.Kind = token.EOF
-		t.Pos = l.scanner.Pos()
-		return t
+		return &token.Token{
+			Kind:token.EOF,
+			Pos:l.scanner.Pos(),
+		}
 	}
-
+	t := &token.Token{}
 	c := l.skipSpace()
-	pos := l.scanner.Pos()
-
+	t.Pos = l.scanner.Pos()
 	switch  {
 		case isAlpha(c) || c=='_' : l.parseAlpha(t)
 		case isDigit(c) : l.parseNumber(t)
@@ -32,18 +34,17 @@ func (l *Lexer) Next() *token.Token {
 		case c=='\'': l.parseChar(t)
 		default: l.parseOther(t)
 	}
-	if t.Kind == token.COMMENT {
-		return l.Next()
-	}
-	t.Pos = pos
+	//if t.Kind == token.COMMENT {
+	//	return l.Next()
+	//}
 	return t
 }
 
-func (l *Lexer) Reset(pos token.Position) {
+func (l *BaseLexer) Reset(pos token.Position) {
 	l.scanner.Reset(pos)
 }
 
-func (l *Lexer) consume() (byte, bool) {
+func (l *BaseLexer) consume() (byte, bool) {
 	l.scanner.Step()
 	if l.scanner.IsEnd() {
 		return 0, false
@@ -51,7 +52,7 @@ func (l *Lexer) consume() (byte, bool) {
 	return l.scanner.Get(), true
 }
 
-func (l *Lexer) parseAlpha(t *token.Token) {
+func (l *BaseLexer) parseAlpha(t *token.Token) {
 	var s []byte
 	var ok bool
 	c := l.scanner.Get()
@@ -75,7 +76,7 @@ func checkIdent(s string) token.TokenKind {
 	return token.IDENT
 }
 // only support int now
-func (l *Lexer) parseNumber(t *token.Token) {
+func (l *BaseLexer) parseNumber(t *token.Token) {
 	var s []byte
 	c := l.scanner.Get()
 	var ok bool
@@ -89,7 +90,7 @@ func (l *Lexer) parseNumber(t *token.Token) {
 	t.Kind = token.INT_LIT
 }
 
-func (l *Lexer) skipSpace() byte {
+func (l *BaseLexer) skipSpace() byte {
 	c := l.scanner.Get()
 	ok := false
 	for isWhitespace(c) || isReturn(c) {
@@ -101,7 +102,7 @@ func (l *Lexer) skipSpace() byte {
 }
 
 func isWhitespace(c byte) bool {
-	return (c == ' ' || c == '\t' || c == '\f' || c == '\r')
+	return c == ' ' || c == '\t' || c == '\f' || c == '\r'
 }
 
 func isReturn(c byte) bool {
@@ -113,32 +114,62 @@ func isAlpha(c byte) bool {
 }
 
 func isDigit(c byte) bool {
-	return ('0' <= c && c <= '9')
+	return '0' <= c && c <= '9'
 }
-
-func (c byte) (token.TokenKind, bool) {
-	if v, ok := singleTokens[c]; ok {
-		return v, ok
+// escape: '\\' '\n' '\r' '\'' '\"' '\t'
+// the current byte is '\\'
+// after calling this, the current char is the last valid escape char
+func (l*BaseLexer)escape() byte {
+	var ch byte
+	c, ok := l.consume()
+	if !ok {
+		panic("unexpected EOF")
 	}
-	return token.EOF, false
+	switch c {
+	case '\\':ch = '\\'
+	case 'n':ch = '\n'
+	case 'r':ch = '\r'
+	case 't':ch = '\t'
+	case '\'':ch = '\''
+	case '"':ch = '"'
+	default:
+		panic("unexpected escape char = '"+string([]byte{c,'\''}))
+	}
+	return ch
+}
+func (l *BaseLexer) parseChar(t *token.Token) {
+	c, ok := l.consume()
+	if !ok {
+		panic("incomplete char")
+	}
+	if c != '\\' {
+		t.Str = string(c)
+	}else {
+		t.Str = string(l.escape())
+	}
+	if c,ok = l.consume(); !ok || c != '\'' {
+		panic("expected end of '")
+	}
+	l.consume()
+	t.Kind = token.CHAR_LIT
 }
 
-func (l *Lexer) parseChar(t *token.Token) {
-	panic("not implement yet")
-}
-
-func (l *Lexer) parseString(t *token.Token) {
+func (l *BaseLexer) parseString(t *token.Token) {
 	t.Str = string(l.readString())
 	t.Kind = token.STRING_LIT
 }
 // no escape char yet
-func (l *Lexer) readString() []byte {
+func (l *BaseLexer) readString() []byte {
 	ok := false
 	c := l.scanner.Get()
 
 	var s []byte
 	for c,ok=l.consume(); ok && c!='"'; c,ok=l.consume() {
-		s = append(s, l.scanner.Get())
+		if c != '\\' {
+			s = append(s, c)
+		}else {
+			s = append(s, l.escape())
+		}
 	}
 	if c!='"' {
 		panic("not complete string")
@@ -146,10 +177,9 @@ func (l *Lexer) readString() []byte {
 	l.consume()
 	return s
 }
-func (l *Lexer)checkComment(t *token.Token) {
-	if t.Kind == COMMENT {
-		var comments []byte
-		var ok bool
+func (l *BaseLexer)checkComment(t *token.Token) {
+	if t.Kind == token.COMMENT {
+		comments := []byte{'/', '/'}
 		for c:=l.scanner.Get(); c != '\n' && !l.scanner.IsEnd(); {
 			comments = append(comments, c)
 			c, _ = l.consume()
@@ -157,27 +187,27 @@ func (l *Lexer)checkComment(t *token.Token) {
 		t.Str = string(comments)
 	}
 }
-func (l *Lexer)parseOther(t *token.Token) {
+func (l *BaseLexer)parseOther(t *token.Token) {
 	c := l.scanner.Get()
 	switch c {
-	case '+': l.parseType3(t, ADD, INC, ADD_ASSIGN)
-	case '-': l.parseType3(t, SUB, DEC, SUB_ASSIGN)
-	case '!': l.parseType2(t, LNOT, NE)
-	case '%': l.parseType2(t, REM, REM_ASSIGN)
-	case '^': l.parseType2(t, XOR, XOR_ASSIGN)
-	case '&': l.parseType4(t, AND, LAND, AND_ASSIGN, LAND_ASSIGN)
-	case '|': l.parseType4(t, OR, LOR, OR_ASSIGN, LOR_ASSIGN)
-	case '*': l.parseType2(t, MUL, MUL_ASSIGN)
-	case '=': l.parseType2(t, ASSIGN, EQ)
-	case '<': l.parseType4(t, LT, SHL, LE, SHL_ASSIGN)
-	case '>': l.parseType4(t, GT, SHR, GE, SHR_ASSIGN)
-	case '/': l.parseType3(t, DIV, COMMENT, DIV_ASSIGN)
+	case '+': l.parseType3(t, token.ADD, token.INC, token.ADD_ASSIGN)
+	case '-': l.parseType3(t, token.SUB, token.DEC, token.SUB_ASSIGN)
+	case '!': l.parseType2(t, token.LNOT, token.NE)
+	case '%': l.parseType2(t, token.REM, token.REM_ASSIGN)
+	case '^': l.parseType2(t, token.XOR, token.XOR_ASSIGN)
+	case '&': l.parseType4(t, token.AND, token.LAND, token.AND_ASSIGN, token.LAND_ASSIGN)
+	case '|': l.parseType4(t, token.OR, token.LOR, token.OR_ASSIGN, token.LOR_ASSIGN)
+	case '*': l.parseType2(t, token.MUL, token.MUL_ASSIGN)
+	case '=': l.parseType2(t, token.ASSIGN, token.EQ)
+	case '<': l.parseType4(t, token.LT, token.SHL, token.LE, token.SHL_ASSIGN)
+	case '>': l.parseType4(t, token.GT, token.SHR, token.GE, token.SHR_ASSIGN)
+	case '/': l.parseType3(t, token.DIV, token.COMMENT, token.DIV_ASSIGN)
 				l.checkComment(t)
 	default:
 		l.parseOther2(t)
 	}
 }
-func (l *Lexer)parseOther2(t *token.Token) {
+func (l *BaseLexer)parseOther2(t *token.Token) {
 	c := l.scanner.Get()
 	if v, ok := singleTokens[c]; ok {
 		l.consume()
@@ -189,8 +219,8 @@ func (l *Lexer)parseOther2(t *token.Token) {
 	}
 }
 // 'x' 'x='
-func (l *Lexer)parseType2(t *token.Token, tk, tke token.TokenKind) {
-	old = l.scanner.Get()
+func (l *BaseLexer)parseType2(t *token.Token, tk, tke token.TokenKind) {
+	old := l.scanner.Get()
 	c, ok := l.consume()
 	if ok && c=='=' {
 		t.Kind = tke
@@ -201,8 +231,8 @@ func (l *Lexer)parseType2(t *token.Token, tk, tke token.TokenKind) {
 		t.Str = string(old)
 	}
 }
-'x' 'xx' 'x='
-func (l *Lexer)parseType3(t *token.Token, tk, tkd, tke token.TokenKind) {
+// 'x' 'xx' 'x='
+func (l *BaseLexer)parseType3(t *token.Token, tk, tkd, tke token.TokenKind) {
 	c1 := l.scanner.Get()
 	c2, ok := l.consume()
 	switch {
@@ -220,7 +250,7 @@ func (l *Lexer)parseType3(t *token.Token, tk, tkd, tke token.TokenKind) {
 	}
 }
 // 'x' 'xx' 'x=' 'xx='
-func (l *Lexer)parseType4(t *token.Token, tk, tkd, tke , tkde token.TokenKind) {
+func (l *BaseLexer)parseType4(t *token.Token, tk, tkd, tke , tkde token.TokenKind) {
 	var c1, c2, c3 byte
 	var ok bool
 	c1 = l.scanner.Get()
