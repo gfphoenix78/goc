@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"gocc/lexer"
+	"github.com/gfphoenix78/goc/lexer"
 	"io"
 	"io/ioutil"
 	"os"
@@ -21,16 +21,16 @@ func ParseFile(file string) bool {
 }
 func ParseReader(r io.Reader) bool {
 	source, error := ioutil.ReadAll(r)
-	if error!=nil {
+	if error != nil {
 		panic(error)
 	}
 	return ParseBytes(source)
 }
 func ParseBytes(source []byte) bool {
 	p := &Parser{
-		l : lexer.NewLexer(source),
+		l: lexer.NewLexer(source),
 	}
-	if p!=nil {
+	if p != nil {
 		return true
 	}
 	return false

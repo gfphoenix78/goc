@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/gfphoenix78/goc/lexer"
+	"github.com/gfphoenix78/goc/token"
 	"go/ast"
-	"goc/lexer"
-	"goc/token"
 	"io/ioutil"
 	"os"
 )

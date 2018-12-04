@@ -1,6 +1,6 @@
 package lexer
 
-import "gocc/token"
+import "github.com/gfphoenix78/goc/token"
 
 type Lexer2 struct {
 	*BaseLexer

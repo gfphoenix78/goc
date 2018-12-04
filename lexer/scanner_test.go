@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"gocc/token"
+	"github.com/gfphoenix78/goc/token"
 	"testing"
 )
 

@@ -1,6 +1,6 @@
 package lexer
 
-import . "gocc/token"
+import . "github.com/gfphoenix78/goc/token"
 
 var (
 	keywords = map[string]TokenKind{
@@ -19,6 +19,8 @@ var (
 		"var":         VAR,
 		"struct":      STRUCT,
 		"type":        TYPE,
+		"true":        TRUE,
+		"false":       FALSE,
 	}
 
 	singleTokens = map[byte]TokenKind{

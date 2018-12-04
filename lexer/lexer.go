@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"goc/token"
+	"github.com/gfphoenix78/goc/token"
 )
 
 type BaseLexer struct {
