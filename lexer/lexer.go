@@ -17,14 +17,14 @@ func (l *BaseLexer) Pos() token.Position {
 }
 
 func (l *BaseLexer) Next() *token.Token {
-	if l.scanner.IsEnd() {
+	c, ok := l.skipSpace()
+	if !ok {
 		return &token.Token{
 			Kind: token.EOF,
 			Pos:  l.scanner.Pos(),
 		}
 	}
 	t := &token.Token{}
-	c := l.skipSpace()
 	t.Pos = l.scanner.Pos()
 	switch {
 	case isAlpha(c) || c == '_':
@@ -92,15 +92,17 @@ func (l *BaseLexer) parseNumber(t *token.Token) {
 	t.Kind = token.INT_LIT
 }
 
-func (l *BaseLexer) skipSpace() byte {
-	c := l.scanner.Get()
-	ok := false
-	for isWhitespace(c) || isReturn(c) {
-		if c, ok = l.consume(); !ok {
-			break
-		}
+// return the first non-whitespace char, and true if valid(not EOF)
+func (l *BaseLexer) skipSpace() (byte, bool) {
+	ok := !l.scanner.IsEnd()
+	if !ok {
+		return 0, false
 	}
-	return c
+	c := l.scanner.Get()
+	for ok && (isWhitespace(c) || isReturn(c)) {
+		c, ok = l.consume()
+	}
+	return c, ok
 }
 
 func isWhitespace(c byte) bool {

@@ -37,7 +37,6 @@ func (l *Lexer2) Next() *token.Token {
 	switch l.last.Kind {
 	case token.IDENT,
 		token.INT_LIT,
-		token.BOOL_LIT,
 		token.STRING_LIT,
 		token.CHAR_LIT,
 		// key words

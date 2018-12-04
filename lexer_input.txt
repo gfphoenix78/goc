@@ -1,4 +1,4 @@
 c
  // input code//
-
+"hi\t\\aa\"k"
  println(c)}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gfphoenix78/goc/lexer"
 	"github.com/gfphoenix78/goc/token"
-	"go/ast"
 	"io/ioutil"
 	"os"
 )
